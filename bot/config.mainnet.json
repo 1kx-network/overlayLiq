@@ -1,0 +1,24 @@
+{
+    "ADDRESS_OVL": "0xdc77aCC82ccE1Cc095CbA197474Cc06824adE6F7",
+    "MARKETS": [
+        {
+            "T0": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+            "T1": "0xdc77aCC82ccE1Cc095CbA197474Cc06824adE6F7",
+            "ADDRESS_OVL_MARKET": "0x7f72986e190bbd1d02dac52b8dda82eea363d313",
+            "ADDRESS_UNIV3_POOL": "0x"
+        }
+    ],
+    "ADDRESS_OVL_STATE": "0x477122219aa1F76E190f480a85af97DE0A643320",
+    "ADDRESS_UNIV3_QUOTER": "0x",
+    "ADDRESS_UNIV3_ROUTER": "0x",
+    "ADDRESS_UNIV3_FACTORY": "0x",
+    "SC_ADDRESS": "0x",
+    "ADDRESS_MISC": {
+        "ADDRESS_OVL": "0xdc77aCC82ccE1Cc095CbA197474Cc06824adE6F7",
+        "ADDRESS_DAI": "0x4f96fe3b7a6cf9725f59d353f723c1bdb64ca6aa",
+        "ADDRESS_WETH": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "ADDRESS_USDC": "0xdcfab8057d08634279f8201b55d311c2a67897d2",
+        "ADDRESS_DAI_WHALE": "0x",
+        "ADDRESS_WETH_WHALE": "0x"
+    }
+}
