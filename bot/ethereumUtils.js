@@ -14,7 +14,7 @@ const FLASHBOTS_ENDPOINT_DICT = {
 }
 
 const ETHERMINE_ENDPOINT = 'https://mev-relay.ethermine.org'
-console.log(`nnnnnnnn ${process.env[`NODE_URL`]}`)
+console.log(`NODE RPC URL: ${process.env[`NODE_URL`]}`)
 class EthereumUtils {
     constructor(node_url = '', chain_id = '') {
         this.PUB_KEY = process.env['PUB_KEY']

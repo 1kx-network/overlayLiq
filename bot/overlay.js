@@ -28,6 +28,7 @@ class Overlay {
     async build() {
 
     }
+
     async getFRArbTxn() {
         let arbTxns = []
         for (let market of config.MARKETS) {
@@ -46,21 +47,13 @@ class Overlay {
         return
     }
 
-
     async checkAndLiquidate(positionInfo, minLiqFee) {
-        console.log(`checkAndLiquidate ${JSON.stringify(positionInfo)} ${minLiqFee}`)
         let ovlStateContract = new ethers.Contract(config.ADDRESS_OVL_STATE, abi_OVL_STATE, this.walletProvider)
-
-
-        let factory = await ovlStateContract.factory()
-        console.log(`factory ${factory}`)
-
         let isLiq = await ovlStateContract.liquidatable(
             positionInfo.marketAddress,
             positionInfo.address,
             positionInfo.id,
         )
-        console.log(`isLiq ${isLiq}`)
 
         if (isLiq === true) {
             let liqProfit = await ovlStateContract.liquidationFee(
@@ -68,16 +61,10 @@ class Overlay {
                 positionInfo.address,
                 positionInfo.id,
             )
-            console.log('liqProfit', liqProfit)
+            console.log('liqProfit', BigInt(liqProfit).toString())
             console.log('minLiqFee', minLiqFee)
-
             if (BigInt(liqProfit.toString()) > BigInt(minLiqFee)) {
                 let ovlMarketContract = new ethers.Contract(positionInfo.marketAddress, abi_OVL_MARKET, this.walletProvider)
-                // let liqPosTest = await ovlMarketContract.liquidate(positionInfo.address, positionInfo.id, {
-                //     gasLimit: 1000000
-                // })
-                // console.log(liqPosTest)
-                // await liqPosTest.wait()
                 let populateTransaction = await ovlMarketContract.populateTransaction.liquidate(positionInfo.address, positionInfo.id, {
                     gasLimit: 1000000
                 })
@@ -86,8 +73,6 @@ class Overlay {
             } else {
                 console.log(`liq profit too low`)
             }
-        } else {
-            console.log(`position ${positionInfo} non liquidatable`)
         }
         return undefined
     }
@@ -100,25 +85,20 @@ class Overlay {
                 liqTxns.push(generateLiqTx)
             }
         }
-        // console.log(`liqTxns ${JSON.stringify(liqTxns, null, 2)} \n kekekekek`)
-        // process.exit(0)
-        // return 
         let nonce = await this.walletProvider.provider.getTransactionCount(this.walletProvider.address, 'latest')
         for (let i = 0; i < liqTxns.length; i++) {
             let txn = liqTxns[i]
             txn.nonce = nonce
             nonce++
-            console.log(`txn txn txn ${txn}`)
+            console.log(`Liquidate txn ${txn}`)
             this.walletProvider.sendTransaction(txn).then((res, err) => {
-                console.log(`txn res ${JSON.stringify(res, null, 2)}`)
+                console.log(`Liquidate txn response: ${JSON.stringify(res, null, 2)}`)
             }).catch((e) => {
-                console.log(`error sending transaction ${txn} ${e}`)
+                console.log(`error Liquidate txn: ${txn} error: ${e}`)
             })
         }
-        // await sleep(22000)
         return
     }
-
 }
 
 module.exports = {

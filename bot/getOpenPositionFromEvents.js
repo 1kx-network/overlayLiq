@@ -19,9 +19,10 @@ async function getOpenPositionFromEvents(events) {
 
         }
     }
+    // @todo: loop thru event and remove position that were already liquidated and closed 
     console.log(`openPositions length ${openPositions.length}`)
-    console.log(`openPositions ${openPositions}`)
-    console.log(`openPositions[0] ${JSON.stringify(openPositions[0],null,2)}`)
+    // console.log(`openPositions ${openPositions}`)
+    // console.log(`openPositions[0] ${JSON.stringify(openPositions[0],null,2)}`)
     return openPositions
 
 }
