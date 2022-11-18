@@ -19,7 +19,7 @@ module.exports = {
       // prolly not gunna be used besides debuging
       // chainId: CHAIN_IDS.hardhat,
       forking: {
-        url: process.env.NETWORK && process.env.NETWORK == 'kovan' ? "https://kovan.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161" : "https://eth-mainnet.g.alchemy.com/v2/cYTrVP5Q9ILCTqce9MNvni_66ZOhDfRj",
+        url: process.env.NODE_URL,
         // prolly not gunna be used besides specific test
         blockNumber: 15775937, // a specific block number with which you want to work
       },
