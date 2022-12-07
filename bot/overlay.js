@@ -82,8 +82,12 @@ class Overlay {
 
     async checkAndLiquidateAll(positionInfoArray, minLiqFee) {
         let liqTxns = []
+        // set gas fee
         let fee = await this.walletProvider.getFeeData();
-        logger.info(`gas fee: ${fee}`)
+        logger.info(`gas fee: ${fee.gasPrice}`)
+        let ourFee = (2n * (10n ** 9n)) + ((BigInt(fee.gasPrice) * 12500n) / 1000n)
+        logger.info(`ourFee: ${ourFee}`)
+
         let allGeneratedLiqTxns = await Promise.allSettled(
             positionInfoArray.map((positionInfo) => this.checkAndLiquidate(positionInfo, minLiqFee))
         )
@@ -98,7 +102,8 @@ class Overlay {
             let txn = liqTxns[i]
             txn.nonce = nonce
             nonce++
-            txn.gasPrice = (2n * (10n ** 9n)) + BigInt(fee.gasPrice);
+            // set gas fee
+            txn.gasPrice = ourFee;
             this.walletProvider.sendTransaction(txn).then((res, err) => {
                 TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
             }).catch((e) => {
