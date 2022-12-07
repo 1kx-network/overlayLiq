@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:0": "npx hardhat test test/0_executeCalls.test.js",
-    "test:1": "npx hardhat test test/1_overlay.test.js"
+    "test:1": "npx hardhat test test/1_overlay.test.js",
+    "start": "NETWORK=mainnet node bot/index.js"
   },
   "keywords": [],
   "author": "",
@@ -21,7 +22,9 @@
     "axios": "^1.1.3",
     "dotenv": "^16.0.1",
     "hardhat": "^2.9.9",
-    "jsbi": "^4.3.0"
+    "ishan-logger": "github:ishan-verma/simple-logger",
+    "jsbi": "^4.3.0",
+    "telegraf": "^4.11.2"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",

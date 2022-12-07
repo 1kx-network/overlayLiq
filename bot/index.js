@@ -1,7 +1,8 @@
+const logger = require('ishan-logger')
 require('dotenv').config({
     override: true
 })
-console.log(` process.env.NODE_URL `, process.env.NODE_URL)
+logger.info(` process.env.NODE_URL `, process.env.NODE_URL)
 const {
     EthereumUtils,
     init
@@ -26,29 +27,32 @@ async function main() {
     ethereumUtils = await init(ethereumUtils, [config.ADDRESS_MISC.ADDRESS_OVL, config.ADDRESS_MISC.ADDRESS_WETH])
     let startingBlockNumber = true
     let fetchedPositions = []
-
+    let isPerformingLiquidation = false
     ethereumUtils.provider.on('block', async (blockNumber) => {
+        let startTime = new Date()
         if (startingBlockNumber || blockNumber.toString().slice(-2) == '50') {
             for (let market of config.MARKETS) {
                 // let ovlMarketContract = new ethers.Contract(market.ADDRESS_OVL_MARKET, abi_OVL_MARKET, archive_pokt)
                 // fetchedPositions = await ovlMarketContract.queryFilter("*")
                 // use pokt archive node to retrieve events 
                 fetchedPositions = await getEvents(market.ADDRESS_OVL_MARKET)
-                console.log(JSON.stringify(fetchedPositions[0], null,2))
+                // logger.info(JSON.stringify(fetchedPositions[0], null,2))
                 fetchedPositions = await getOpenPositionFromEvents(fetchedPositions)
             }
         }
-        if (!startingBlockNumber) {
+        if (!startingBlockNumber && !isPerformingLiquidation) {
             try {
-                console.log(blockNumber)
                 let overlay = new Overlay(ethereumUtils.wallet)
-                console.log(`perform liquidations`)
-                await overlay.checkAndLiquidateAll(fetchedPositions, 10 ** 19)
-
+                logger.info(`perform liquidations`)
+                isPerformingLiquidation = true
+                await overlay.checkAndLiquidateAll(fetchedPositions, 10 ** 16)
+                isPerformingLiquidation = false
             } catch (error) {
-                console.log(`error main: ${error}`)
+                logger.error(`error main: ${error}`)
+                isPerformingLiquidation = false
             }
         }
+        logger.info(`blockNumber@${blockNumber} done in ${new Date()-startTime}\n`)
         startingBlockNumber = false
     })
 

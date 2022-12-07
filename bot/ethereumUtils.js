@@ -1,3 +1,4 @@
+const logger = require('ishan-logger')
 const abi_erc20 = require('../abis/IERC20.json')['abi']
 const {
     providers,
@@ -14,7 +15,7 @@ const FLASHBOTS_ENDPOINT_DICT = {
 }
 
 const ETHERMINE_ENDPOINT = 'https://mev-relay.ethermine.org'
-console.log(`NODE RPC URL: ${process.env[`NODE_URL`]}`)
+logger.info(`NODE RPC URL: ${process.env[`NODE_URL`]}`)
 class EthereumUtils {
     constructor(node_url = '', chain_id = '') {
         this.PUB_KEY = process.env['PUB_KEY']
@@ -108,14 +109,14 @@ class EthereumUtils {
     }
 
     async setSCBalance(tokenAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') {
-        console.log(`tokenAddress ${tokenAddress}`)
-        console.log(`this.sCAddress ${this.sCAddress}`)
+        logger.info(`tokenAddress ${tokenAddress}`)
+        logger.info(`this.sCAddress ${this.sCAddress}`)
         let decimals = await new ethers.Contract(tokenAddress, abi_erc20, this.wallet).decimals().catch((err) => {
-            console.log(`err decimals ${err}`)
+            logger.info(`err decimals ${err}`)
         })
-        console.log(`decimals ${decimals}`)
+        logger.info(`decimals ${decimals}`)
         let balance = await new ethers.Contract(tokenAddress, abi_erc20, this.wallet).balanceOf(this.sCAddress).catch((err) => {
-            console.log(`err balanceOf ${err}`)
+            logger.info(`err balanceOf ${err}`)
         })
         this.sCBalance = balance.toString()
         this.tokenBalances[`${tokenAddress}`] = await this.get18DecimalResult(tokenAddress, balance.toString())
@@ -144,7 +145,7 @@ class EthereumUtils {
     async setBaseFeeNextBlock() {
         const block = await this.provider.getBlock("latest");
         const maxBaseFeeInFutureBlock = FlashbotsBundleProvider.getMaxBaseFeeInFutureBlock(block.baseFeePerGas, 1);
-        console.log(`maxBaseFeeInFutureBlock ${maxBaseFeeInFutureBlock}`)
+        logger.info(`maxBaseFeeInFutureBlock ${maxBaseFeeInFutureBlock}`)
         this.maxBaseFeeInFutureBlock = maxBaseFeeInFutureBlock
         return maxBaseFeeInFutureBlock
     }
@@ -152,7 +153,7 @@ class EthereumUtils {
     async getBlockNumber() {
         const blockNumber = await this.provider.getBlockNumber()
         this.blockNumber = blockNumber
-        console.log(`...getBlockNumber(): ${blockNumber}`)
+        logger.info(`...getBlockNumber(): ${blockNumber}`)
         return this.blockNumber
     }
 
@@ -193,7 +194,7 @@ async function init(ethereumUtils, tokenArray) {
     // for (token of tokenArray) {
     //     await ethereumUtils.setSCBalance(token).catch(
     //         function (err) {
-    //             console.log('err', err)
+    //             logger.info('err', err)
     //         }
     //     )
     // }

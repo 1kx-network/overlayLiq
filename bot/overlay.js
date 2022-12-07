@@ -1,7 +1,11 @@
+const logger = require('ishan-logger')
 const config = require(`./config.${process.env.NETWORK}.json`)
 const abi_OVL_STATE = require('../abis/OVL_STATE.json')
 const abi_OVL_MARKET = require('../abis/OVL_MARKET.json')
 const ethers = require('ethers');
+const TG = require('./tg.js');
+
+let etherscanLink = 'https://etherscan.io/tx/'
 
 function sleep(ms) {
     return new Promise((res, rej) => {
@@ -14,12 +18,12 @@ class Overlay {
         this.fundingRate = {}
     }
     async getFRAll() {
-        console.log('config.ADDRESS_OVL_STATE', config.ADDRESS_OVL_STATE)
-        console.log(`abi_OVL_STATE ${abi_OVL_STATE}`)
-        console.log('walletProvider.address', this.walletProvider.address)
-        let ovlStateContract = new ethers.Contract(config.ADDRESS_OVL_STATE, abi_OVL_STATE, this.this.walletProvider)
+        logger.info('config.ADDRESS_OVL_STATE', config.ADDRESS_OVL_STATE)
+        logger.info(`abi_OVL_STATE ${abi_OVL_STATE}`)
+        logger.info('walletProvider.address', this.walletProvider.address)
+        let ovlStateContract = new ethers.Contract(config.ADDRESS_OVL_STATE, abi_OVL_STATE, this.walletProvider)
         for (let market of config.MARKETS) {
-            console.log(`market.ADDRESS_OVL_MARKET ${market.ADDRESS_OVL_MARKET}`)
+            logger.info(`market.ADDRESS_OVL_MARKET ${market.ADDRESS_OVL_MARKET}`)
             this.fundingRate[`${market.ADDRESS_OVL_MARKET}`] = (await ovlStateContract.fundingRate(`${market.ADDRESS_OVL_MARKET}`)).toString()
         }
         return
@@ -41,7 +45,7 @@ class Overlay {
                 // check loss*3 < fr 
                 // if true then build long
             } else {
-                console.log(`market ${market.ADDRESS_OVL_MARKET} has fr ${fr}`)
+                logger.info(`market ${market.ADDRESS_OVL_MARKET} has fr ${fr}`)
             }
         }
         return
@@ -54,24 +58,23 @@ class Overlay {
             positionInfo.address,
             positionInfo.id,
         )
-
         if (isLiq === true) {
             let liqProfit = await ovlStateContract.liquidationFee(
                 positionInfo.marketAddress,
                 positionInfo.address,
                 positionInfo.id,
             )
-            console.log('liqProfit', BigInt(liqProfit).toString())
-            console.log('minLiqFee', minLiqFee)
+            logger.info('liqProfit', BigInt(liqProfit).toString())
+            logger.info('minLiqFee', minLiqFee)
             if (BigInt(liqProfit.toString()) > BigInt(minLiqFee)) {
                 let ovlMarketContract = new ethers.Contract(positionInfo.marketAddress, abi_OVL_MARKET, this.walletProvider)
                 let populateTransaction = await ovlMarketContract.populateTransaction.liquidate(positionInfo.address, positionInfo.id, {
                     gasLimit: 1000000
                 })
-                console.log(`populateTransaction ${JSON.stringify(populateTransaction, null, 2)}`)
+                logger.info(`populateTransaction ${JSON.stringify(populateTransaction, null, 2)}`)
                 return populateTransaction
             } else {
-                console.log(`liq profit too low`)
+                logger.info(`liq profit too low`)
             }
         }
         return undefined
@@ -79,22 +82,27 @@ class Overlay {
 
     async checkAndLiquidateAll(positionInfoArray, minLiqFee) {
         let liqTxns = []
-        for (let i = 0; i < positionInfoArray.length; i++) {
-            let generateLiqTx = await this.checkAndLiquidate(positionInfoArray[i], minLiqFee)
-            if (typeof generateLiqTx !== 'undefined') {
-                liqTxns.push(generateLiqTx)
+        let fee = await this.walletProvider.getFeeData();
+        logger.info(`gas fee: ${fee}`)
+        let allGeneratedLiqTxns = await Promise.allSettled(
+            positionInfoArray.map((positionInfo) => this.checkAndLiquidate(positionInfo, minLiqFee))
+        )
+        for (let generateLiqTx of allGeneratedLiqTxns) {
+            if (generateLiqTx.status == 'fulfilled' && typeof generateLiqTx.value !== 'undefined') {
+                liqTxns.push(generateLiqTx.value)
             }
         }
+
         let nonce = await this.walletProvider.provider.getTransactionCount(this.walletProvider.address, 'latest')
         for (let i = 0; i < liqTxns.length; i++) {
             let txn = liqTxns[i]
             txn.nonce = nonce
             nonce++
-            console.log(`Liquidate txn ${txn}`)
+            txn.gasPrice = (2n * (10n ** 9n)) + BigInt(fee.gasPrice);
             this.walletProvider.sendTransaction(txn).then((res, err) => {
-                console.log(`Liquidate txn response: ${JSON.stringify(res, null, 2)}`)
+                TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
             }).catch((e) => {
-                console.log(`error Liquidate txn: ${txn} error: ${e}`)
+                logger.error(`error Liquidate txn: ${txn} error: ${e}`)
             })
         }
         return
