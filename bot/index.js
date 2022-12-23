@@ -22,6 +22,7 @@ const {
 const {
     publishHeartbeat
 } = require('./metrics');
+const TG = require('./tg.js');
 
 let archive_pokt = new ethers.providers.JsonRpcProvider(process.env.ARCHIVE_NODE_URL)
 
@@ -56,9 +57,20 @@ async function main() {
             }
         }
         logger.info(`blockNumber@${blockNumber} done in ${new Date()-startTime}\n`)
-        publishHeartbeat({ botName: "overlay-bot" });
+        publishHeartbeat({
+            botName: "overlay-bot"
+        });
         startingBlockNumber = false
     })
 
 }
-main()
+
+// sleep time expects milliseconds
+function sleep(time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+main().catch(async (e) => {
+    TG.sendMessage('ovlbot: overlay bot stopped due to error')
+    await sleep(60000)
+})
