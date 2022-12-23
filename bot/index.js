@@ -19,6 +19,9 @@ const {
 const {
     getEvents
 } = require('../bot/getEvents');
+const {
+    publishHeartbeat
+} = require('./metrics');
 
 let archive_pokt = new ethers.providers.JsonRpcProvider(process.env.ARCHIVE_NODE_URL)
 
@@ -53,6 +56,7 @@ async function main() {
             }
         }
         logger.info(`blockNumber@${blockNumber} done in ${new Date()-startTime}\n`)
+        publishHeartbeat({ botName: "overlay-bot" });
         startingBlockNumber = false
     })
 
