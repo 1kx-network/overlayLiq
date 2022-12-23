@@ -72,5 +72,6 @@ function sleep(time) {
 
 main().catch(async (e) => {
     TG.sendMessage('ovlbot: overlay bot stopped due to error')
+    logger.error(`bot stopped `, e)
     await sleep(60000)
 })
