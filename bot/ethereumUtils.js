@@ -23,7 +23,21 @@ class EthereumUtils {
         this.FB_PRI_KEY = process.env['FB_PRI_KEY']
         this.NODE_URL = node_url == '' ? process.env[`NODE_URL`] : node_url
         this.CHAIN_ID = process.env['CHAIN_ID']
-        this.provider = new providers.JsonRpcProvider(process.env[`NODE_URL`])
+        // this.provider = new providers.JsonRpcProvider(process.env[`NODE_URL`])
+        this.provider = new providers.FallbackProvider(
+            [{
+                    provider: new providers.StaticJsonRpcProvider(process.env[`ALCHEMY_NODE_URL`], "mainnet"),
+                    priority: 1,
+                    stallTimeout: 200,
+                    weight: 1,
+                },
+                {
+                    provider: new providers.StaticJsonRpcProvider(process.env[`NODE_URL`], "mainnet"),
+                    priority: 1,
+                    stallTimeout: 200,
+                    weight: 1,
+                }
+            ], 1)
         this.FLASHBOTS_ENDPOINT = FLASHBOTS_ENDPOINT_DICT[`CHAIN_ID`]
         this.wallet = new Wallet(this.PRI_KEY, this.provider)
         this.walletReputation = new Wallet(this.FB_PRI_KEY, this.provider)
