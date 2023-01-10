@@ -26,13 +26,13 @@ class EthereumUtils {
         // this.provider = new providers.JsonRpcProvider(process.env[`NODE_URL`])
         this.provider = new providers.FallbackProvider(
             [{
-                    provider: new providers.StaticJsonRpcProvider(process.env[`ALCHEMY_NODE_URL`], "mainnet"),
-                    priority: 1,
+                    provider: new providers.StaticJsonRpcProvider(process.env[`NODE_URL`], "mainnet"),
+                    priority: 2,
                     stallTimeout: 200,
                     weight: 1,
                 },
                 {
-                    provider: new providers.StaticJsonRpcProvider(process.env[`NODE_URL`], "mainnet"),
+                    provider: new providers.StaticJsonRpcProvider(process.env[`ALCHEMY_NODE_URL`], "mainnet"),
                     priority: 1,
                     stallTimeout: 200,
                     weight: 1,
