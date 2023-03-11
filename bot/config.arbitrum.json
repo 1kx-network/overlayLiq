@@ -1,0 +1,38 @@
+{
+    "ADDRESS_OVL": "0x4305c4bc521b052f17d389c2fe9d37cabeb70d54",
+    "MARKETS": [
+        {
+            "T0": "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
+            "T1": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+            "ADDRESS_OVL_MARKET": "0xc28350047d006ed387b0f210d4ea3218137a8a38",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "WBTC"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0xa811698d855153cc7472d1fb356149a94bd618e7",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "MATIC"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x833ba1a942dc6d33bc3e6959637ae00e0cdcb20b",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "AVAX"
+        }
+    ],
+    "ADDRESS_OVL_STATE": "0xC3cB99652111e7828f38544E3e94c714D8F9a51a",
+    "ADDRESS_UNIV3_QUOTER": "0x",
+    "ADDRESS_UNIV3_ROUTER": "0x",
+    "ADDRESS_UNIV3_FACTORY": "0x",
+    "SC_ADDRESS": "0x",
+    "ADDRESS_MISC": {
+        "ADDRESS_OVL": "0x4305c4bc521b052f17d389c2fe9d37cabeb70d54",
+        "ADDRESS_WETH": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+        "ADDRESS_USDC": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+        "ADDRESS_DAI_WHALE": "0x",
+        "ADDRESS_WETH_WHALE": "0x"
+    }
+}

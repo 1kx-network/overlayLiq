@@ -6,25 +6,25 @@ const {
 } = require('ethers')
 const ethers = require('ethers')
 const {
-    FlashbotsBundleProvider
+    FlashbotsBundleProvider,
+    FlashbotsBundleResolution
 } = require("@flashbots/ethers-provider-bundle");
-
+const TG = require('./tg.js');
 const FLASHBOTS_ENDPOINT_DICT = {
-    '1': "https://relay.flashbots.net",
-    '5': "https://relay-goerli.flashbots.net",
+    '1': ["https://relay.flashbots.net", "https://api.edennetwork.io/v1/bundle", "https://builder0x69.io", "https://rpc.beaverbuild.org/"],
+    '5': ["https://relay-goerli.flashbots.net"],
 }
-
-const ETHERMINE_ENDPOINT = 'https://mev-relay.ethermine.org'
 logger.info(`NODE RPC URL: ${process.env[`NODE_URL`]}`)
 class EthereumUtils {
-    constructor(node_url = '', chain_id = '') {
+    constructor(node_url = '', chain_id = '1') {
         this.PUB_KEY = process.env['PUB_KEY']
         this.PRI_KEY = process.env['PRI_KEY']
         this.FB_PRI_KEY = process.env['FB_PRI_KEY']
         this.NODE_URL = node_url == '' ? process.env[`NODE_URL`] : node_url
-        this.CHAIN_ID = process.env['CHAIN_ID']
+        this.CHAIN_ID = chain_id
         // this.provider = new providers.JsonRpcProvider(process.env[`NODE_URL`])
-        this.provider = new providers.FallbackProvider(
+        // this.provider = new providers.JsonRpcProvider(process.env[`ALCHEMY_NODE_URL`])
+        this.provider = chain_id == '5' ? new providers.JsonRpcProvider("https://eth-goerli.g.alchemy.com/v2/EBqKHb9omBS5TabVvEJmZMGr03l0Tt6B") : new providers.FallbackProvider(
             [{
                     provider: new providers.StaticJsonRpcProvider(process.env[`NODE_URL`], "mainnet"),
                     priority: 2,
@@ -38,7 +38,6 @@ class EthereumUtils {
                     weight: 1,
                 }
             ], 1)
-        this.FLASHBOTS_ENDPOINT = FLASHBOTS_ENDPOINT_DICT[`CHAIN_ID`]
         this.wallet = new Wallet(this.PRI_KEY, this.provider)
         this.walletReputation = new Wallet(this.FB_PRI_KEY, this.provider)
         this.sCAddress = process.env.ADDRESS_SC
@@ -50,9 +49,11 @@ class EthereumUtils {
     }
 
     async setFlashBotsProvider() {
-        this.flashbotsProvider = await FlashbotsBundleProvider.create(this.provider, this.walletReputation, this.FLASHBOTS_ENDPOINT)
-        this.simulateProvider = await FlashbotsBundleProvider.create(this.provider, this.walletReputation, this.NODE_URL)
-        this.ethermineProvider = await FlashbotsBundleProvider.create(this.provider, this.walletReputation, ETHERMINE_ENDPOINT)
+        this.flashbotsProvider = await FlashbotsBundleProvider.create(this.provider, this.walletReputation, FLASHBOTS_ENDPOINT_DICT[`${this.CHAIN_ID}`][0])
+        this.buildersProviders = []
+        for (let i in FLASHBOTS_ENDPOINT_DICT[`${this.CHAIN_ID}`]) {
+            this.buildersProviders[i] = await FlashbotsBundleProvider.create(this.provider, this.walletReputation, FLASHBOTS_ENDPOINT_DICT[`${this.CHAIN_ID}`][i])
+        }
         return
     }
 
@@ -88,7 +89,7 @@ class EthereumUtils {
     }
     let transactionArray = [transaction]
     */
-    async signBundle(transactionArray, targetBlockNumber) {
+    async signBundle(transactionArray) {
         const signedTransactions = await this.flashbotsProvider.signBundle(transactionArray)
         return signedTransactions
     }
@@ -96,25 +97,15 @@ class EthereumUtils {
     async simulate(signedTransactions, targetBlockNumber) {
         // todo run geth node and use our own node
         const simulation = await this.flashbotsProvider.simulate(signedTransactions, targetBlockNumber)
-
         // const simulation = await this.simulateProvider.simulate(signedTransactions, targetBlockNumber)
         return simulation
     }
-    async sendRawBundle(signedTransactions, targetBlockNumber, relay = 'FB') {
-        if (relay === 'EM') {
-            const bundleSubmission = await this.ethermineProvider.sendRawBundle(
-                signedTransactions,
-                targetBlockNumber
-            )
-            return bundleSubmission
-        }
-        if (relay === 'FB') {
-            const bundleSubmission = await this.flashbotsProvider.sendRawBundle(
-                signedTransactions,
-                targetBlockNumber
-            )
-            return bundleSubmission
-        }
+    async sendRawBundle(signedTransactions, targetBlockNumber) {
+        const bundleSubmission = await this.flashbotsProvider.sendRawBundle(
+            signedTransactions,
+            targetBlockNumber
+        )
+        return bundleSubmission
     }
 
     async getContractInstance(tokenAddress, abi) {
@@ -125,15 +116,10 @@ class EthereumUtils {
     async setSCBalance(tokenAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2') {
         logger.info(`tokenAddress ${tokenAddress}`)
         logger.info(`this.sCAddress ${this.sCAddress}`)
-        let decimals = await new ethers.Contract(tokenAddress, abi_erc20, this.wallet).decimals().catch((err) => {
-            logger.info(`err decimals ${err}`)
-        })
-        logger.info(`decimals ${decimals}`)
-        let balance = await new ethers.Contract(tokenAddress, abi_erc20, this.wallet).balanceOf(this.sCAddress).catch((err) => {
-            logger.info(`err balanceOf ${err}`)
-        })
-        this.sCBalance = balance.toString()
-        this.tokenBalances[`${tokenAddress}`] = await this.get18DecimalResult(tokenAddress, balance.toString())
+        let balanceObj = new ethers.Contract(tokenAddress, abi_erc20, this.wallet)
+        let balance = await balanceObj.balanceOf(this.sCAddress)
+        console.log(`balance ${balance}`)
+        // this.tokenBalances[`${tokenAddress}`] = await this.get18DecimalResult(tokenAddress, balance.toString())
     }
 
     async getTokenInfo(tokenArray) {
@@ -199,19 +185,73 @@ class EthereumUtils {
         }
     }
 
+    async sendPrivateTx(txn, targetBlockNumber) {
+        logger.info(`using flashbots`)
+        let transactionArray = [{
+            transaction: {
+                chainId: 1,
+                type: 2,
+                value: 0,
+                data: txn.data,
+                maxFeePerGas: txn.gasPrice,
+                nonce: txn.nonce,
+                maxPriorityFeePerGas: txn.gasPrice,
+                gasLimit: 1000000,
+                to: txn.to
+            },
+            signer: this.wallet
+        }]
+        let signedTransactions = await this.signBundle(transactionArray)
+
+        try {
+            await Promise.allSettled(
+                this.buildersProviders.map(
+                    async (buildersProvider)=>{
+                        let bundleSubmission = await buildersProvider.sendRawBundle(signedTransactions, targetBlockNumber)
+                        let waitResponse = await bundleSubmission.wait()
+                        logger.info(` waitResponse ${waitResponse}`)
+                        if (waitResponse === FlashbotsBundleResolution.BundleIncluded || waitResponse === FlashbotsBundleResolution.AccountNonceTooHigh) {
+                            TG.sendMessage(`FB txn was included https://etherscan.io/tx/${bundleSubmission.bundleTransactions[0].hash}`, 1)
+                        } else {
+                            try {
+                                logger.error(`txn not included :( (means not a fb block or txnFee/profit not high enough)`, 1)
+                                let simulationPost = await bundleSubmission.simulate()
+                                logger.info(`target_blockNum@${target_blockNumber} simulationPost ${JSON.stringify(simulationPost,null,2)}`)
+                                let bundleStats = await this.buildersProvider.getBundleStats(simulationPost.bundleHash, target_blockNumber)
+                                logger.info(`target_blockNum@${target_blockNumber} bundleStats ${JSON.stringify(bundleStats,null,2)}`)
+                            } catch (e) {
+                                logger.error(`debug bundle that didn't make it ${e}`)
+                            }
+                        }
+                    }
+                )
+            )
+        } catch (e) {
+            let bundleSubmission = await this.sendRawBundle(signedTransactions, targetBlockNumber)
+            let waitResponse = await bundleSubmission.wait()
+            logger.info(` waitResponse ${waitResponse}`)
+            if (waitResponse === FlashbotsBundleResolution.BundleIncluded || waitResponse === FlashbotsBundleResolution.AccountNonceTooHigh) {
+                TG.sendMessage(`FB txn was included https://etherscan.io/tx/${bundleSubmission.bundleTransactions[0].hash}`, 1)
+            } else {
+                try {
+                    logger.error(`txn not included :( (means not a fb block or txnFee/profit not high enough)`, 1)
+                    let simulationPost = await bundleSubmission.simulate()
+                    logger.info(`target_blockNum@${target_blockNumber} simulationPost ${JSON.stringify(simulationPost,null,2)}`)
+                    let bundleStats = await this.flashbotsProvider.getBundleStats(simulationPost.bundleHash, target_blockNumber)
+                    logger.info(`target_blockNum@${target_blockNumber} bundleStats ${JSON.stringify(bundleStats,null,2)}`)
+                } catch (e) {
+                    logger.error(`debug bundle that didn't make it ${e}`)
+                }
+            }
+        }
+    }
+
 }
 
-async function init(ethereumUtils, tokenArray) {
+async function init(ethereumUtils) {
     await ethereumUtils.setFlashBotsProvider()
     await ethereumUtils.setBaseFeeNextBlock()
     await ethereumUtils.setWalletBalance()
-    // for (token of tokenArray) {
-    //     await ethereumUtils.setSCBalance(token).catch(
-    //         function (err) {
-    //             logger.info('err', err)
-    //         }
-    //     )
-    // }
     return ethereumUtils
 }
 

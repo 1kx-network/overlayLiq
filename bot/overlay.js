@@ -4,8 +4,11 @@ const abi_OVL_STATE = require('../abis/OVL_STATE.json')
 const abi_OVL_MARKET = require('../abis/OVL_MARKET.json')
 const ethers = require('ethers');
 const TG = require('./tg.js');
+const {
+    FlashbotsBundleResolution
+} = require("@flashbots/ethers-provider-bundle");
 
-let etherscanLink = 'https://etherscan.io/tx/'
+let etherscanLink = 'https://arbiscan.io/tx/'
 
 function sleep(ms) {
     return new Promise((res, rej) => {
@@ -13,8 +16,9 @@ function sleep(ms) {
     })
 }
 class Overlay {
-    constructor(walletProvider) {
+    constructor(walletProvider, ethereumUtils) {
         this.walletProvider = walletProvider
+        this.ethereumUtils = ethereumUtils
         this.fundingRate = {}
     }
     async getFRAll() {
@@ -67,6 +71,7 @@ class Overlay {
             logger.info('liqProfit', BigInt(liqProfit).toString())
             logger.info('minLiqFee', minLiqFee)
             if (BigInt(liqProfit.toString()) > BigInt(minLiqFee)) {
+                TG.sendMessage(`OVLBOT: Liquidatable Position ${Number(liqProfit)/10**18} OVL profit `);
                 let ovlMarketContract = new ethers.Contract(positionInfo.marketAddress, abi_OVL_MARKET, this.walletProvider)
                 let populateTransaction = await ovlMarketContract.populateTransaction.liquidate(positionInfo.address, positionInfo.id, {
                     gasLimit: 1000000
@@ -81,11 +86,15 @@ class Overlay {
     }
 
     async checkAndLiquidateAll(positionInfoArray, minLiqFee) {
+        let currentBlock = await this.ethereumUtils.getBlockNumber()
+        currentBlock = parseInt(currentBlock.toString())
+        let targetBlockNumber = currentBlock + 1
         let liqTxns = []
         // set gas fee
         let fee = await this.walletProvider.getFeeData();
         logger.info(`gas fee: ${fee.gasPrice}`)
-        let ourFee = (2n * (10n ** 9n)) + ((BigInt(fee.gasPrice) * 12500n) / 1000n)
+        let ourFee = BigInt(fee.gasPrice)
+        // let ourFee = (2n * (10n ** 9n)) + ((BigInt(fee.gasPrice) * 1250n) / 1000n)
         logger.info(`ourFee: ${ourFee}`)
 
         let allGeneratedLiqTxns = await Promise.allSettled(
@@ -104,11 +113,24 @@ class Overlay {
             nonce++
             // set gas fee
             txn.gasPrice = ourFee;
-            this.walletProvider.sendTransaction(txn).then((res, err) => {
-                TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
-            }).catch((e) => {
-                logger.error(`error Liquidate txn: ${txn} error: ${e}`)
-            })
+            logger.info(`overlay liq txn ${txn}`)
+            
+            // this.walletProvider.sendTransaction(txn).then((res, err) => {
+            //     TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
+            // }).catch((e) => {
+            //     logger.error(`error Liquidate txn: ${txn} error: ${e}`)
+            // })
+
+            // try {
+            //     this.ethereumUtils.sendPrivateTx(txn, targetBlockNumber)
+            // } catch (error) {
+            //     logger.info(`error Liquidate txn via FB - txn: ${txn} error: ${e}`)
+            //     // this.walletProvider.sendTransaction(txn).then((res, err) => {
+            //     //     TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
+            //     // }).catch((e) => {
+            //     //     logger.error(`error Liquidate txn: ${txn} error: ${e}`)
+            //     // })
+            // }
         }
         return
     }

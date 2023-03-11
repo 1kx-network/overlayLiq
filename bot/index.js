@@ -23,43 +23,66 @@ const {
     publishHeartbeat
 } = require('./metrics');
 const TG = require('./tg.js');
+const { runJob }=require('./healthCheck');
 
 let archive_pokt = new ethers.providers.JsonRpcProvider(process.env.ARCHIVE_NODE_URL)
 
 async function main() {
     let ethereumUtils = new EthereumUtils()
-    ethereumUtils = await init(ethereumUtils, [config.ADDRESS_MISC.ADDRESS_OVL, config.ADDRESS_MISC.ADDRESS_WETH])
+    // ethereumUtils = await init(ethereumUtils, [config.ADDRESS_MISC.ADDRESS_OVL, config.ADDRESS_MISC.ADDRESS_WETH])
+    ethereumUtils = await init(ethereumUtils)
     let startingBlockNumber = true
     let fetchedPositions = []
     let isPerformingLiquidation = false
+    let fromBlockEvent = 64174460
     ethereumUtils.provider.on('block', async (blockNumber) => {
         let startTime = new Date()
-        if (startingBlockNumber || blockNumber.toString().slice(-2) == '50') {
-            for (let market of config.MARKETS) {
-                // let ovlMarketContract = new ethers.Contract(market.ADDRESS_OVL_MARKET, abi_OVL_MARKET, archive_pokt)
-                // fetchedPositions = await ovlMarketContract.queryFilter("*")
-                // use pokt archive node to retrieve events 
-                fetchedPositions = await getEvents(market.ADDRESS_OVL_MARKET)
-                // logger.info(JSON.stringify(fetchedPositions[0], null,2))
-                fetchedPositions = await getOpenPositionFromEvents(fetchedPositions)
-            }
+        let toBlockEvent = blockNumber
+        if (
+            (startingBlockNumber || blockNumber%10 == 0) &&
+            !isPerformingLiquidation
+        ) {
+            await Promise.all(
+                config.MARKETS.map(
+                    async (market) => {
+                        let ovlMarketContract = new ethers.Contract(market.ADDRESS_OVL_MARKET, abi_OVL_MARKET, archive_pokt)
+                        // let oiLong = await ovlMarketContract.oiLong()
+                        // logger.info(`oiLong ${oiLong}`)
+                        // console.log(ovlMarketContract)
+                        logger.info(`
+                        fromBlockEvent ${fromBlockEvent}
+                        toBlockEvent   ${toBlockEvent}  
+                        `)
+                        let fetchedPositionsForMarket = await ovlMarketContract.queryFilter("*", fromBlockEvent, toBlockEvent)
+
+                        // use pokt archive node to retrieve events 
+                        // fetchedPositions = await getEvents(market.ADDRESS_OVL_MARKET)
+                        // logger.info(JSON.stringify(fetchedPositions[0], null,2))
+                        // fetchedPositions = await getOpenPositionFromEvents(fetchedPositions)
+                        fetchedPositions = fetchedPositions.concat(fetchedPositionsForMarket);
+                    }
+                )
+            )
+            fromBlockEvent = toBlockEvent
         }
         if (!startingBlockNumber && !isPerformingLiquidation) {
             try {
-                let overlay = new Overlay(ethereumUtils.wallet)
+                logger.info(`fetchedPositions ${(fetchedPositions.length)}`)
+                let overlay = new Overlay(ethereumUtils.wallet, ethereumUtils)
                 logger.info(`perform liquidations`)
                 isPerformingLiquidation = true
-                await overlay.checkAndLiquidateAll(fetchedPositions, 10 ** 16)
+                await overlay.checkAndLiquidateAll(fetchedPositions, 1)
                 isPerformingLiquidation = false
+                logger.info(`blockNumber@${blockNumber} done in ${new Date()-startTime}\n`)
             } catch (error) {
                 logger.error(`error main: ${error}`)
                 isPerformingLiquidation = false
             }
         }
-        logger.info(`blockNumber@${blockNumber} done in ${new Date()-startTime}\n`)
-        publishHeartbeat({
-            botName: "overlay-bot"
-        });
+        await runJob().catch(e=>logger.error(`ping fail`))
+        // publishHeartbeat({
+        //     botName: "overlay-bot"
+        // });
         startingBlockNumber = false
     })
 
