@@ -23,7 +23,9 @@ const {
     publishHeartbeat
 } = require('./metrics');
 const TG = require('./tg.js');
-const { runJob }=require('./healthCheck');
+const {
+    runJob
+} = require('./healthCheck');
 
 let archive_pokt = new ethers.providers.JsonRpcProvider(process.env.ARCHIVE_NODE_URL)
 
@@ -39,7 +41,7 @@ async function main() {
         let startTime = new Date()
         let toBlockEvent = blockNumber
         if (
-            (startingBlockNumber || blockNumber%10 == 0) &&
+            (startingBlockNumber || blockNumber % 10 == 0) &&
             !isPerformingLiquidation
         ) {
             await Promise.all(
@@ -78,8 +80,8 @@ async function main() {
                 logger.error(`error main: ${error}`)
                 isPerformingLiquidation = false
             }
+            runJob().catch(e => logger.error(`ping fail`))
         }
-        await runJob().catch(e=>logger.error(`ping fail`))
         // publishHeartbeat({
         //     botName: "overlay-bot"
         // });
