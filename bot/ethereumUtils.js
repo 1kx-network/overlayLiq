@@ -24,20 +24,7 @@ class EthereumUtils {
         this.CHAIN_ID = chain_id
         // this.provider = new providers.JsonRpcProvider(process.env[`NODE_URL`])
         // this.provider = new providers.JsonRpcProvider(process.env[`ALCHEMY_NODE_URL`])
-        this.provider = chain_id == '5' ? new providers.JsonRpcProvider("https://eth-goerli.g.alchemy.com/v2/EBqKHb9omBS5TabVvEJmZMGr03l0Tt6B") : new providers.FallbackProvider(
-            [{
-                    provider: new providers.StaticJsonRpcProvider(process.env[`NODE_URL`], "mainnet"),
-                    priority: 2,
-                    stallTimeout: 200,
-                    weight: 1,
-                },
-                {
-                    provider: new providers.StaticJsonRpcProvider(process.env[`ALCHEMY_NODE_URL`], "mainnet"),
-                    priority: 1,
-                    stallTimeout: 200,
-                    weight: 1,
-                }
-            ], 1)
+        this.provider = new providers.JsonRpcProvider( process.env[`NODE_URL`]) 
         this.wallet = new Wallet(this.PRI_KEY, this.provider)
         this.walletReputation = new Wallet(this.FB_PRI_KEY, this.provider)
         this.sCAddress = process.env.ADDRESS_SC
