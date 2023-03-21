@@ -31,19 +31,23 @@ let archive_pokt = new ethers.providers.JsonRpcProvider(process.env.ARCHIVE_NODE
 
 async function main() {
     let ethereumUtils = new EthereumUtils()
-    // ethereumUtils = await init(ethereumUtils, [config.ADDRESS_MISC.ADDRESS_OVL, config.ADDRESS_MISC.ADDRESS_WETH])
+    let lastPing = new Date()
+    let lastAccountFetch
+
     ethereumUtils = await init(ethereumUtils)
     let startingBlockNumber = true
     let fetchedPositions = []
     let isPerformingLiquidation = false
     let fromBlockEvent = 64174460
+    let overlay = new Overlay(ethereumUtils.wallet, ethereumUtils)
     ethereumUtils.provider.on('block', async (blockNumber) => {
         let startTime = new Date()
         let toBlockEvent = blockNumber
         if (
-            (startingBlockNumber || blockNumber % 10 == 0) &&
+            (typeof lastAccountFetch=="undefined"||new Date()-lastAccountFetch>10*60*1000) &&
             !isPerformingLiquidation
         ) {
+            fetchedPositions = []
             await Promise.all(
                 config.MARKETS.map(
                     async (market) => {
@@ -55,22 +59,23 @@ async function main() {
                         fromBlockEvent ${fromBlockEvent}
                         toBlockEvent   ${toBlockEvent}  
                         `)
-                        let fetchedPositionsForMarket = await ovlMarketContract.queryFilter("*", fromBlockEvent, toBlockEvent)
+                        let allEvents = await ovlMarketContract.queryFilter("*", fromBlockEvent, toBlockEvent)
 
                         // use pokt archive node to retrieve events 
                         // fetchedPositions = await getEvents(market.ADDRESS_OVL_MARKET)
                         // logger.info(JSON.stringify(fetchedPositions[0], null,2))
-                        // fetchedPositions = await getOpenPositionFromEvents(fetchedPositions)
-                        fetchedPositions = fetchedPositions.concat(fetchedPositionsForMarket);
+                        new_fetchedPositions = await getOpenPositionFromEvents(allEvents)
+                        fetchedPositions = fetchedPositions.concat(new_fetchedPositions);
                     }
                 )
             )
             fromBlockEvent = toBlockEvent
+            lastAccountFetch = new Date()
+            logger.info(`fetched positions in ${new Date()-startTime}\n`)
         }
         if (!startingBlockNumber && !isPerformingLiquidation) {
             try {
-                logger.info(`fetchedPositions ${(fetchedPositions.length)}`)
-                let overlay = new Overlay(ethereumUtils.wallet, ethereumUtils)
+                logger.info(`fetchedPositions: ${(fetchedPositions.length)}`)
                 logger.info(`perform liquidations`)
                 isPerformingLiquidation = true
                 await overlay.checkAndLiquidateAll(fetchedPositions, 1)
@@ -80,14 +85,13 @@ async function main() {
                 logger.error(`error main: ${error}`)
                 isPerformingLiquidation = false
             }
-            runJob().catch(e => logger.error(`ping fail`))
+            if(new Date - lastPing > 30*1000){
+                lastPing =  new Date()
+                runJob().catch(e => logger.error(`ping fail`))
+            }
         }
-        // publishHeartbeat({
-        //     botName: "overlay-bot"
-        // });
         startingBlockNumber = false
     })
-
 }
 
 // sleep time expects milliseconds

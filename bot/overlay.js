@@ -20,6 +20,7 @@ class Overlay {
         this.walletProvider = walletProvider
         this.ethereumUtils = ethereumUtils
         this.fundingRate = {}
+        this.ovlStateContract = new ethers.Contract(config.ADDRESS_OVL_STATE, abi_OVL_STATE, walletProvider)
     }
     async getFRAll() {
         logger.info('config.ADDRESS_OVL_STATE', config.ADDRESS_OVL_STATE)
@@ -56,20 +57,19 @@ class Overlay {
     }
 
     async checkAndLiquidate(positionInfo, minLiqFee) {
-        let ovlStateContract = new ethers.Contract(config.ADDRESS_OVL_STATE, abi_OVL_STATE, this.walletProvider)
-        let isLiq = await ovlStateContract.liquidatable(
+        let isLiq = await this.ovlStateContract.liquidatable(
             positionInfo.marketAddress,
             positionInfo.address,
             positionInfo.id,
         )
         if (isLiq === true) {
-            let liqProfit = await ovlStateContract.liquidationFee(
+            let liqProfit = await this.ovlStateContract.liquidationFee(
                 positionInfo.marketAddress,
                 positionInfo.address,
                 positionInfo.id,
             )
-            logger.info('liqProfit', BigInt(liqProfit).toString())
-            logger.info('minLiqFee', minLiqFee)
+            logger.info(`liqProfit ${BigInt(liqProfit).toString()}`, )
+            logger.info(`minLiqFee ${minLiqFee}`, )
             if (BigInt(liqProfit.toString()) > BigInt(minLiqFee)) {
                 TG.sendMessage(`OVLBOT: Liquidatable Position ${Number(liqProfit)/10**18} OVL profit `);
                 let ovlMarketContract = new ethers.Contract(positionInfo.marketAddress, abi_OVL_MARKET, this.walletProvider)
@@ -86,51 +86,30 @@ class Overlay {
     }
 
     async checkAndLiquidateAll(positionInfoArray, minLiqFee) {
-        let currentBlock = await this.ethereumUtils.getBlockNumber()
-        currentBlock = parseInt(currentBlock.toString())
-        let targetBlockNumber = currentBlock + 1
         let liqTxns = []
-        // set gas fee
-        let fee = await this.walletProvider.getFeeData();
-        logger.info(`gas fee: ${fee.gasPrice}`)
-        let ourFee = BigInt(fee.gasPrice)
-        // let ourFee = (2n * (10n ** 9n)) + ((BigInt(fee.gasPrice) * 1250n) / 1000n)
-        logger.info(`ourFee: ${ourFee}`)
 
         let allGeneratedLiqTxns = await Promise.allSettled(
-            positionInfoArray.map((positionInfo) => this.checkAndLiquidate(positionInfo, minLiqFee))
+            positionInfoArray.map(async (positionInfo) => await this.checkAndLiquidate(positionInfo, minLiqFee))
         )
-        for (let generateLiqTx of allGeneratedLiqTxns) {
+
+        allGeneratedLiqTxns.map((generateLiqTx)=>{
             if (generateLiqTx.status == 'fulfilled' && typeof generateLiqTx.value !== 'undefined') {
                 liqTxns.push(generateLiqTx.value)
             }
-        }
+        })
 
         let nonce = await this.walletProvider.provider.getTransactionCount(this.walletProvider.address, 'latest')
         for (let i = 0; i < liqTxns.length; i++) {
             let txn = liqTxns[i]
             txn.nonce = nonce
             nonce++
-            // set gas fee
-            txn.gasPrice = ourFee;
             logger.info(`overlay liq txn ${txn}`)
-            
-            // this.walletProvider.sendTransaction(txn).then((res, err) => {
-            //     TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
-            // }).catch((e) => {
-            //     logger.error(`error Liquidate txn: ${txn} error: ${e}`)
-            // })
-
-            // try {
-            //     this.ethereumUtils.sendPrivateTx(txn, targetBlockNumber)
-            // } catch (error) {
-            //     logger.info(`error Liquidate txn via FB - txn: ${txn} error: ${e}`)
-            //     // this.walletProvider.sendTransaction(txn).then((res, err) => {
-            //     //     TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
-            //     // }).catch((e) => {
-            //     //     logger.error(`error Liquidate txn: ${txn} error: ${e}`)
-            //     // })
-            // }
+            this.walletProvider.sendTransaction(txn).then((res, err) => {
+                TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
+            }).catch((e) => {
+                logger.error(`error Liquidate txn: ${txn} error: ${e}`)
+                process.exit(0)
+            })
         }
         return
     }
