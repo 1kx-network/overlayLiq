@@ -37,17 +37,20 @@ async function main() {
     ethereumUtils = await init(ethereumUtils)
     let startingBlockNumber = true
     let fetchedPositions = []
+    let fetchedPositionsIP=false
     let isPerformingLiquidation = false
     let fromBlockEvent = 64174460
     let overlay = new Overlay(ethereumUtils.wallet, ethereumUtils)
     ethereumUtils.provider.on('block', async (blockNumber) => {
         let startTime = new Date()
         let toBlockEvent = blockNumber
+        logger.info(`blockNumber ${blockNumber}`)
         if (
-            (typeof lastAccountFetch=="undefined"||new Date()-lastAccountFetch>10*60*1000) &&
-            !isPerformingLiquidation
+            (typeof lastAccountFetch=="undefined"||new Date()-lastAccountFetch>1*60*1000) &&
+            !isPerformingLiquidation && !fetchedPositionsIP
         ) {
-            fetchedPositions = []
+            fetchedPositionsIP = true
+            currentFetchedPositions = []
             await Promise.all(
                 config.MARKETS.map(
                     async (market) => {
@@ -65,13 +68,15 @@ async function main() {
                         // fetchedPositions = await getEvents(market.ADDRESS_OVL_MARKET)
                         // logger.info(JSON.stringify(fetchedPositions[0], null,2))
                         new_fetchedPositions = await getOpenPositionFromEvents(allEvents)
-                        fetchedPositions = fetchedPositions.concat(new_fetchedPositions);
+                        currentFetchedPositions = currentFetchedPositions.concat(new_fetchedPositions);
                     }
                 )
             )
-            fromBlockEvent = toBlockEvent
+            fetchedPositions = currentFetchedPositions
+            // fromBlockEvent = toBlockEvent
             lastAccountFetch = new Date()
             logger.info(`fetched positions in ${new Date()-startTime}\n`)
+            fetchedPositionsIP = false
         }
         if (!startingBlockNumber && !isPerformingLiquidation) {
             try {

@@ -71,10 +71,14 @@ class Overlay {
             logger.info(`liqProfit ${BigInt(liqProfit).toString()}`, )
             logger.info(`minLiqFee ${minLiqFee}`, )
             if (BigInt(liqProfit.toString()) > BigInt(minLiqFee)) {
-                TG.sendMessage(`OVLBOT: Liquidatable Position ${Number(liqProfit)/10**18} OVL profit `);
+                try{
+                    TG.sendMessage(`OVLBOT: Liquidatable Position ${Number(liqProfit)/10**18} OVL profit `);
+                }catch(e){
+                    logger.error(`tg sendmessage fail ${e}`)
+                }
                 let ovlMarketContract = new ethers.Contract(positionInfo.marketAddress, abi_OVL_MARKET, this.walletProvider)
                 let populateTransaction = await ovlMarketContract.populateTransaction.liquidate(positionInfo.address, positionInfo.id, {
-                    gasLimit: 1000000
+                    gasLimit: 3000000
                 })
                 logger.info(`populateTransaction ${JSON.stringify(populateTransaction, null, 2)}`)
                 return populateTransaction
@@ -105,7 +109,11 @@ class Overlay {
             nonce++
             logger.info(`overlay liq txn ${txn}`)
             this.walletProvider.sendTransaction(txn).then((res, err) => {
-                TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
+                try{
+                    TG.sendMessage(`OVLBOT: Liquidated Position ${etherscanLink+res.hash}`);
+                }catch(e){
+                    logger.error(`tg sendmessage fail ${e}`)
+                }
             }).catch((e) => {
                 logger.error(`error Liquidate txn: ${txn} error: ${e}`)
                 process.exit(0)
