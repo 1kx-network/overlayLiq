@@ -1,5 +1,20 @@
 # Overlay Liquidation 
 
+# Gravita Liq BOT
+
+liquidation bot that sends transaction whenenver a position is liquidatable 
+
+### Goal:
+
+- liquidate positions for multiple markets on overlay
+- portfolio support for overlay (find out areas of improvement, make sure positions are liq etc)
+
+### Process:
+- run the following everyblock
+- get all positions (do it every 2mins async in background) 
+- check if any of pos liquidatable and and generate txns
+- send txns privately with ethereumUtils.js
+
 # create `.env` file 
 ```shell
 NETWORK="mainnet"
