@@ -116,7 +116,7 @@ class Overlay {
                 }
             }).catch((e) => {
                 logger.error(`error Liquidate txn: ${txn} error: ${e}`)
-                process.exit(0)
+                // process.exit(0)
             })
         }
         return

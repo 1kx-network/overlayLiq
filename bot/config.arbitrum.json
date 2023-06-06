@@ -21,6 +21,34 @@
             "ADDRESS_OVL_MARKET": "0x833ba1a942dc6d33bc3e6959637ae00e0cdcb20b",
             "ADDRESS_UNIV3_POOL": "0x",
             "marketName": "AVAX"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0xb31d222c23104cbc2c04df77941f1f2c478133dd",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "BAYC"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x33659282d39e62b62060c3f9fb2230e97db15f1e",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "APE"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x1067b7df86552a53d816ce3fed50d6d01310b48f",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "SOL"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x02e5938904014901c96f534b063ec732ea3b48d5",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "LINK"
         }
     ],
     "ADDRESS_OVL_STATE": "0xC3cB99652111e7828f38544E3e94c714D8F9a51a",

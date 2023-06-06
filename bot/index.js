@@ -44,9 +44,8 @@ async function main() {
     ethereumUtils.provider.on('block', async (blockNumber) => {
         let startTime = new Date()
         let toBlockEvent = blockNumber
-        logger.info(`blockNumber ${blockNumber}`)
         if (
-            (typeof lastAccountFetch=="undefined"||new Date()-lastAccountFetch>1*60*1000) &&
+            (typeof lastAccountFetch=="undefined"||new Date()-lastAccountFetch>10*60*1000) &&
             !isPerformingLiquidation && !fetchedPositionsIP
         ) {
             fetchedPositionsIP = true
