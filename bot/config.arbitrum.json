@@ -2,8 +2,50 @@
     "ADDRESS_OVL": "0x4305c4bc521b052f17d389c2fe9d37cabeb70d54",
     "MARKETS": [
         {
-            "T0": "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
-            "T1": "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0xccd645835ca0033f0c1106e7b24f288e59e867e8",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "MILADY"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x8c7dc90243fc7984583339da8df0a5d57ec491db",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "PUDGIES"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x8c82c349e349ffd9403c3984cb1ad1b0f76f7d2e",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "PUNKS"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0xb31d222c23104cbc2c04df77941f1f2c478133dd",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "BAYC"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0xce45c64911bd0a088daabd73ee1bc09ae98cd84b",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "MAYC"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x35e1d28ad9d8a80cff5bbf163a735c54eb6c1342",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "AZUKI"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
             "ADDRESS_OVL_MARKET": "0xc28350047d006ed387b0f210d4ea3218137a8a38",
             "ADDRESS_UNIV3_POOL": "0x",
             "marketName": "WBTC"
@@ -21,6 +63,34 @@
             "ADDRESS_OVL_MARKET": "0x833ba1a942dc6d33bc3e6959637ae00e0cdcb20b",
             "ADDRESS_UNIV3_POOL": "0x",
             "marketName": "AVAX"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0xb31d222c23104cbc2c04df77941f1f2c478133dd",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "BAYC"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x33659282d39e62b62060c3f9fb2230e97db15f1e",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "APE"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x1067b7df86552a53d816ce3fed50d6d01310b48f",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "SOL"
+        },
+        {
+            "T0": "0x",
+            "T1": "0x",
+            "ADDRESS_OVL_MARKET": "0x02e5938904014901c96f534b063ec732ea3b48d5",
+            "ADDRESS_UNIV3_POOL": "0x",
+            "marketName": "LINK"
         }
     ],
     "ADDRESS_OVL_STATE": "0xC3cB99652111e7828f38544E3e94c714D8F9a51a",
