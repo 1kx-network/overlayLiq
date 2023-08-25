@@ -4,44 +4,9 @@
         {
             "T0": "0x",
             "T1": "0x",
-            "ADDRESS_OVL_MARKET": "0xccd645835ca0033f0c1106e7b24f288e59e867e8",
+            "ADDRESS_OVL_MARKET": "0x7c65c99ba1edfc94c535b7aa2d72b0f7357a676b",
             "ADDRESS_UNIV3_POOL": "0x",
-            "marketName": "MILADY"
-        },
-        {
-            "T0": "0x",
-            "T1": "0x",
-            "ADDRESS_OVL_MARKET": "0x8c7dc90243fc7984583339da8df0a5d57ec491db",
-            "ADDRESS_UNIV3_POOL": "0x",
-            "marketName": "PUDGIES"
-        },
-        {
-            "T0": "0x",
-            "T1": "0x",
-            "ADDRESS_OVL_MARKET": "0x8c82c349e349ffd9403c3984cb1ad1b0f76f7d2e",
-            "ADDRESS_UNIV3_POOL": "0x",
-            "marketName": "PUNKS"
-        },
-        {
-            "T0": "0x",
-            "T1": "0x",
-            "ADDRESS_OVL_MARKET": "0xb31d222c23104cbc2c04df77941f1f2c478133dd",
-            "ADDRESS_UNIV3_POOL": "0x",
-            "marketName": "BAYC"
-        },
-        {
-            "T0": "0x",
-            "T1": "0x",
-            "ADDRESS_OVL_MARKET": "0xce45c64911bd0a088daabd73ee1bc09ae98cd84b",
-            "ADDRESS_UNIV3_POOL": "0x",
-            "marketName": "MAYC"
-        },
-        {
-            "T0": "0x",
-            "T1": "0x",
-            "ADDRESS_OVL_MARKET": "0x35e1d28ad9d8a80cff5bbf163a735c54eb6c1342",
-            "ADDRESS_UNIV3_POOL": "0x",
-            "marketName": "AZUKI"
+            "marketName": "CVI"
         },
         {
             "T0": "0x",
@@ -63,13 +28,6 @@
             "ADDRESS_OVL_MARKET": "0x833ba1a942dc6d33bc3e6959637ae00e0cdcb20b",
             "ADDRESS_UNIV3_POOL": "0x",
             "marketName": "AVAX"
-        },
-        {
-            "T0": "0x",
-            "T1": "0x",
-            "ADDRESS_OVL_MARKET": "0xb31d222c23104cbc2c04df77941f1f2c478133dd",
-            "ADDRESS_UNIV3_POOL": "0x",
-            "marketName": "BAYC"
         },
         {
             "T0": "0x",

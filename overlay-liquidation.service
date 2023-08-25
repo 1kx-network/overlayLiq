@@ -1,0 +1,16 @@
+[Unit]
+Description=Overlay Liquidation
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/admin/overlayLiq
+User=admin
+Group=admin
+#Environment="NETWORK=arbitrum"
+#ExecStart=/home/admin/.nvm/versions/node/v16.19.1/bin/node bot/index.js
+ExecStart=/home/admin/.nvm/versions/node/v16.19.1/bin/node /usr/local/bin/yarn start
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
